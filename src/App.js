@@ -17,7 +17,6 @@ const Laptop = ({ currentPage, onClick }) => {
     const canvasTexture = useRef();
     const events = useRef();
     
-    // Load the GLTF model
     const { nodes, animations } = useLoader(GLTFLoader, '/laptop-mini-quality-open-close.glb');
 
     const findAnimation = (animationName) => {
@@ -64,14 +63,12 @@ const Laptop = ({ currentPage, onClick }) => {
         const context = contextRef.current;
         let states = {};
 
-        // Draw on the canvas based on the current page
         const drawContent = () => {
             updateFunction.current = (null);
             events.current.removeAll();
             states = {};
 
             context.clearRect(0, 0, canvas.width, canvas.height);
-            // Call the appropriate function for the current page
             const pageContent = pageData[currentPage];
             if (pageContent && pageContent.screen) {
                 let repeating = pageContent.screen(context, false, 0, states, events.current);
@@ -90,12 +87,9 @@ const Laptop = ({ currentPage, onClick }) => {
         };
 
         if(canvas && context) drawContent();
-
-        // Set up animation mixer
     }, [currentPage]);
 
     useEffect(() => {
-        // Update the screen material with the canvas texture
         if (nodes.Laptop && nodes.Laptop.children) {
             const screenMat = new THREE.MeshStandardMaterial();
             if (screenMat) {
@@ -126,21 +120,19 @@ const Laptop = ({ currentPage, onClick }) => {
         // };
     }, [laptopRef]);
 
-    // Handle open/close state change
     const toggleLid = () => {
         if (openState) {
-            // Close the lid
+            // Lid Closing
             setOpenState(false);
             // animationMixer.clipAction(findAnimation("OpenLid")).play(); // Assuming CloseLid is the second animation
         } else {
-            // Open the lid
+            // Lid Opening
             setOpenState(true);
             // animationMixer.clipAction(findAnimation("CloseLid")).play(); // Assuming OpenLid is the third animation
         }
         onClick();
     };
 
-    // Update the animation mixer on each frame
     useFrame((state, delta) => {
         if (animationMixer) animationMixer.update(delta);
         if (typeof updateFunction.current == "function") {
@@ -164,10 +156,9 @@ const pageData = [
 
             ctx.fillStyle = 'white';
             ctx.font = '100px Consolas';
-            ctx.fillText(':(', 50, 100);
+            ctx.fillText(':(', 50, 130);
             ctx.font = '20px Consolas';
             
-            // BSOD Message
             const bsodText = `
             Your PC ran into a problem and needs to restart.
             We're just collecting some error info, and then we'll restart for you.
@@ -176,12 +167,11 @@ const pageData = [
             If you call a support person, give them this info:
             Stop Code: CRITICAL_PROCESS_DIED`;
 
-            // Draw the text line by line
             const lines = bsodText.split('\n');
-            let y = 200; // Starting Y position
+            let y = 200; 
             lines.forEach(line => {
                 ctx.fillText(line.trim(), 50, y);
-                y += 30; // Line height
+                y += 30;
             });
         },
         content: () => <div>Page 0 Content</div>,
@@ -190,65 +180,53 @@ const pageData = [
     {
         pageId: 1,
         screen: (ctx, isUpdate, delta, states) => {
-            // Set canvas dimensions
             const canvasWidth = ctx.canvas.width;
             const canvasHeight = ctx.canvas.height;
             
-            // Fill the background with black
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvasWidth, canvasHeight);
         
-            // If it's the initial render, setup states
             if (!isUpdate) {
-                // Set initial states for loading circle and logo
-                states.rotation = 0; // Rotation angle for the loading circle
-                states.logoRadius = 20; // Radius of the loading circle
-                states.dotRadius = 2; // Radius of the dots in the loading circle
-                states.numDots = 10; // Number of dots in the loading circle
-                states.centerX = canvasWidth / 2; // Center X coordinate
-                states.centerY = canvasHeight / 5; // Center Y coordinate for the Windows logo
-                states.loadingCenterY = canvasHeight / 2.5; // Y position for the loading circle
-                states.logoColor = '#00a4ef'; // Windows logo color
+                states.rotation = 0;
+                states.logoRadius = 20;
+                states.dotRadius = 2;
+                states.numDots = 10;
+                states.centerX = canvasWidth / 2;
+                states.centerY = canvasHeight / 5;
+                states.loadingCenterY = canvasHeight / 2.5;
+                states.logoColor = '#00a4ef';
             } else {
-                // Update the rotation of the loading circle using the delta time
-                states.rotation += 0.05; // Adjust speed by tweaking the multiplier
+                states.rotation += 0.05;
             }
     
-            // Draw the Windows logo
             const spacing = canvasWidth * 0.01;
-            const rectWidth = 40;  // Width of each rectangle in the Windows logo
-            const rectHeight = 40; // Height of each rectangle in the Windows logo
+            const rectWidth = 40;
+            const rectHeight = 40;
     
-            // First top-left rectangle
             ctx.fillStyle = states.logoColor;
             ctx.fillRect(states.centerX - rectWidth - spacing / 2, states.centerY - rectHeight - spacing / 2, rectWidth, rectHeight);
     
-            // Top-right rectangle
             ctx.fillRect(states.centerX + spacing / 2, states.centerY - rectHeight - spacing / 2, rectWidth, rectHeight);
     
-            // Bottom-left rectangle
             ctx.fillRect(states.centerX - rectWidth - spacing / 2, states.centerY + spacing / 2, rectWidth, rectHeight);
     
-            // Bottom-right rectangle
             ctx.fillRect(states.centerX + spacing / 2, states.centerY + spacing / 2, rectWidth, rectHeight);
     
-            // Draw the loading circle (rotating dots)
-            ctx.save(); // Save the current drawing state
-            ctx.translate(states.centerX, states.loadingCenterY); // Move the context to the loading circle's center
-    
+            ctx.save();
+            ctx.translate(states.centerX, states.loadingCenterY);
+
             for (let i = 0; i < states.numDots; i++) {
-                const angle = (i / states.numDots) * Math.PI * 2; // Calculate the angle for each dot
-                const x = Math.cos(angle + states.rotation) * states.logoRadius; // X position of the dot
-                const y = Math.sin(angle + states.rotation) * states.logoRadius; // Y position of the dot
+                const angle = (i / states.numDots) * Math.PI * 2;
+                const x = Math.cos(angle + states.rotation) * states.logoRadius;
+                const y = Math.sin(angle + states.rotation) * states.logoRadius;
     
-                // Draw each dot
                 ctx.beginPath();
                 ctx.arc(x, y, states.dotRadius, 0, Math.PI * 2);
-                ctx.fillStyle = i == states.numDots - 1 ? 'black' : 'white'; // Dot color
+                ctx.fillStyle = i == states.numDots - 1 ? 'black' : 'white';
                 ctx.fill();
             }
     
-            ctx.restore(); // Restore the context state
+            ctx.restore();
     
             return true;
         },
@@ -258,18 +236,15 @@ const pageData = [
     {
         pageId: 2,
         screen: (ctx, isUpdate, delta, states) => {
-            // Set canvas dimensions
             const canvasWidth = ctx.canvas.width;
             const canvasHeight = ctx.canvas.height;
-    
-            // Fill the background with black
+
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-    
-            // If it's the initial render, setup states
+
             if (!isUpdate) {
-                states.textY = canvasHeight * 0.3; // Starting Y position for the text
-                states.lineHeight = 20; // Height between lines of text
+                states.textY = canvasHeight * 0.3;
+                states.lineHeight = 20;
                 states.messages = [
                     'Booting Linux...',
                     'Initializing system...',
@@ -282,27 +257,24 @@ const pageData = [
                     'Linux boot completed.',
                     'Welcome to your Linux system!',
                 ];
-                states.currentMessage = 0; // Index of the current message to display
-                states.lastUpdate = 0; // Time of the last update
+                states.currentMessage = 0;
+                states.lastUpdate = 0;
             } else {
-                // Update the message display rate
                 states.lastUpdate += 1;
-                if (states.lastUpdate > 10) { // Change message every 500 milliseconds
+                if (states.lastUpdate > 10) {
                     states.currentMessage = (states.currentMessage + 1) % states.messages.length;
-                    states.lastUpdate = 0; // Reset last update time
+                    states.lastUpdate = 0;
                 }
             }
-    
-            // Draw the messages
-            ctx.fillStyle = 'white'; // Text color
-            ctx.font = '16px monospace'; // Monospace font for terminal look
-    
+            
+            ctx.fillStyle = 'white';
+            ctx.font = '16px monospace'; 
+
             for (let i = 0; i < states.messages.length; i++) {
                 ctx.fillText(states.messages[i], canvasWidth * 0.1, states.textY + i * states.lineHeight);
             }
     
-            // Highlight the current message
-            ctx.fillStyle = '#00FF00'; // Green color for the current message
+            ctx.fillStyle = '#00FF00';
             ctx.fillText(states.messages[states.currentMessage], canvasWidth * 0.1, states.textY + states.currentMessage * states.lineHeight);
     
             return true;
@@ -310,96 +282,10 @@ const pageData = [
         content: () => <div>Page 2 Content</div>,
         title: "Linux Boot Screen",
     },
-    {
-        pageId: 4,
-        screen: (ctx, isUpdate, delta, states, events) => {
-            // Set canvas dimensions
-            const canvasWidth = ctx.canvas.width;
-            const canvasHeight = ctx.canvas.height;
-    
-            // Fill the background with black
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-            // If it's the initial render, setup states
-            if (!isUpdate) {
-                states.textY = canvasHeight * 0.1; // Starting Y position for the text
-                states.lineHeight = 24; // Height between lines of text
-                states.history = []; // Command history
-                states.currentInput = ''; // Current user input
-                states.prompt = '$ '; // Command prompt
-
-                events.on('keydown', (event) => {
-                    event.preventDefault();
-                    const key = event.key;
-                    if (key === 'Enter') {
-                        // Execute command and reset input
-                        const command = states.currentInput.trim();
-                        const folders = [
-                            "bin  boot dev etc",
-                            "home lib  opt temp",
-                            "root run  sys proc",
-                            "usr  var"
-                        ];
-                        if (command) {
-                            states.history.push(states.prompt + command);
-                            // Simulate command output
-                            if (command === 'help') {
-                                states.history.push('Available commands: help, clear, ls, echo <message>');
-                            } else if (command === 'clear') {
-                                states.history = []; // Clear the terminal
-                            } else if (command.startsWith('echo ')) {
-                                const message = command.slice(5);
-                                states.history.push(message);
-                            } else if (command.startsWith('bash')) {
-                            } else if (command.startsWith('ls')) {
-                                const message = command.slice(2);
-                                if(message && message.trim() !== '/') states.history.push(folders.join(' ').match(message.trim()) ? `"${message.trim()}": Permission denied (os error 13)` : `"${message.trim()}": No such file or directory (os error 2)`);
-                                else states.history.push(...folders);
-                            } else {
-                                states.history.push(`bash: ${command}: command not found`);
-                            }
-                        }
-                        states.currentInput = ''; // Clear input after executing command
-                    } else if (key === 'Backspace') {
-                        // Remove last character
-                        states.currentInput = states.currentInput.slice(0, -1);
-                    } else if (key?.length === 1) {
-                        // Add character to input
-                        states.currentInput += key;
-                    }
-                });
-                
-            }
-
-    
-            // Draw the prompt and user input
-            ctx.fillStyle = 'green'; // Text color
-            ctx.font = '20px monospace'; // Monospace font for terminal look
-            
-            // Display command history
-            for (let i = 0; i < states.history.length; i++) {
-                ctx.fillText(states.history[i], canvasWidth * 0.1, states.textY + i * states.lineHeight);
-            }
-    
-            // Draw the prompt
-            ctx.fillText(states.prompt + states.currentInput, canvasWidth * 0.1, states.textY + states.history.length * states.lineHeight);
-
-            const cursorX = canvasWidth * 0.1 + ctx.measureText(states.prompt + states.currentInput).width; // X position for the cursor
-            const cursorY = states.textY + states.history.length * states.lineHeight - 20; // Adjust cursor Y position
-            ctx.fillRect(cursorX, cursorY, 2, 20); // Draw a vertical line as the cursor
-
-            return true;
-        },
-        content: () => {
-            return <div>Page 4 Content</div>;
-        },
-        title: "Linux-like Terminal",
-    },
     {
         pageId: 5,
         screen: (ctx, isUpdate, delta, states) => {
-            // Set canvas dimensions
             const canvasWidth = ctx.canvas.width;
             const canvasHeight = ctx.canvas.height;
 
@@ -409,75 +295,63 @@ const pageData = [
                 const terminalX = (canvasWidth - terminalWidth) / 10;
                 const terminalY = (canvasHeight - terminalHeight) * 0.1;
 
-    
-                // Draw terminal background
                 ctx.fillStyle = '#11111b';
                 ctx.fillRect(terminalX, terminalY, terminalWidth, terminalHeight);
 
-                // Draw close, minimize, and maximize buttons
-                ctx.fillStyle = '#FF5C5C'; // Close button color
+                ctx.fillStyle = '#FF5C5C'; // Close color
                 ctx.beginPath();
                 ctx.arc(terminalX + 20, terminalY + 15, 5, 0, Math.PI * 2);
                 ctx.fill();
         
-                ctx.fillStyle = '#FFBD44'; // Minimize button color
+                ctx.fillStyle = '#FFBD44'; // Minimize color
                 ctx.beginPath();
                 ctx.arc(terminalX + 40, terminalY + 15, 5, 0, Math.PI * 2);
                 ctx.fill();
         
-                ctx.fillStyle = '#00CA56'; // Maximize button color
+                ctx.fillStyle = '#00CA56'; // Maximize color
                 ctx.beginPath();
                 ctx.arc(terminalX + 60, terminalY + 15, 5, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // Terminal text settings
-                ctx.fillStyle = 'white'; // Text color
-                ctx.font = '16px monospace'; // Monospace font for terminal
-                ctx.textBaseline = 'top';
+                ctx.fillStyle = 'white';
+                ctx.font = '16px monospace';
     
-                // Draw the terminal command and output
                 const terminalCommand = '$ drw ./main.drw';
                 const terminalOutput = 'Hello, World!';
-                ctx.fillText(terminalCommand, terminalX + 15, terminalY + 45);
+                ctx.fillText(terminalCommand, terminalX + 15, terminalY + 55);
                 ctx.fillText(terminalOutput, terminalX + 15, terminalY + 75);
-                ctx.fillText('$ ', terminalX + 15, terminalY + 105);
+                ctx.fillText('$', terminalX + 15, terminalY + 95);
             };
 
             const drawCode = () => {
-
-                // Draw the MacOS-like window
                 const windowWidth = canvasWidth * 0.6;
                 const windowHeight = canvasHeight * 0.4;
                 const windowX = (canvasWidth - windowWidth) / 1.2;
                 const windowY = (canvasHeight - windowHeight) * 0.1;
         
-                // Draw the window background
                 ctx.fillStyle = '#11111b';
                 ctx.fillRect(windowX, windowY, windowWidth, windowHeight);
                 
-                // Draw window title bar
                 ctx.fillStyle = '#11111b';
                 ctx.fillRect(windowX, windowY, windowWidth, 30);
                 
-                // Draw close, minimize, and maximize buttons
-                ctx.fillStyle = '#FF5C5C'; // Close button color
+                ctx.fillStyle = '#FF5C5C'; // Close color
                 ctx.beginPath();
                 ctx.arc(windowX + 20, windowY + 15, 5, 0, Math.PI * 2);
                 ctx.fill();
         
-                ctx.fillStyle = '#FFBD44'; // Minimize button color
+                ctx.fillStyle = '#FFBD44'; // Minimize color
                 ctx.beginPath();
                 ctx.arc(windowX + 40, windowY + 15, 5, 0, Math.PI * 2);
                 ctx.fill();
         
-                ctx.fillStyle = '#00CA56'; // Maximize button color
+                ctx.fillStyle = '#00CA56'; // Maximize color
                 ctx.beginPath();
                 ctx.arc(windowX + 60, windowY + 15, 5, 0, Math.PI * 2);
                 ctx.fill();
         
-                // Draw the highlighted code
-                ctx.fillStyle = 'black'; // Text color
-                ctx.font = '16px monospace'; // Monospace font for code
+                ctx.fillStyle = 'black';
+                ctx.font = '16px monospace';
                 const codeLines = [
                     'import "#std"',
                     'import extern "libc" as libc',
@@ -511,14 +385,11 @@ const pageData = [
                     return "#cdd6f4";
                 };
         
-                // Draw each line of code with highlighting
                 codeLines.forEach((line, index) => {
-                    const words = line.split(' '); // Split line into words
-                    let xOffset = windowX + 15; // Initial X position for the line
-
-                    // Highlight words
+                    const words = line.split(' ');
+                    let xOffset = windowX + 15;
+                    
                     words.forEach((word, wordIndex) => {
-                        // Measure the width of the current word and space
                         let wordWidth = ctx.measureText(word).width;
                         let spaceWidth = ctx.measureText(' ').width;
                         if(words[wordIndex+1]?.startsWith('--') && word.endsWith('--')){
@@ -529,19 +400,17 @@ const pageData = [
                             wordWidth = ctx.measureText(word).width;
                         }
 
-                        // Draw the word
-                        ctx.fillStyle = findColor(word, words, wordIndex); // Text color
+                        ctx.fillStyle = findColor(word, words, wordIndex);
                         ctx.fillText(word, xOffset, windowY + 50 + index * 25);
 
-                        // Update xOffset for the next word
-                        xOffset += wordWidth + spaceWidth; // Move to the right for next word
+                        xOffset += wordWidth + spaceWidth;
                     });
                 });
             }
     
             if(!isUpdate){
                 const image = new Image();
-                image.src = '/cat_leaves.png'; // Path to your wallpaper image
+                image.src = '/cat_leaves.png';
                 image.onload = () => {
                     ctx.drawImage(image, 0, 0, canvasWidth, canvasHeight);
                     drawTerminal();
@@ -557,12 +426,87 @@ const pageData = [
             return <div>Page 5 Content</div>;
         },
         title: "Highlighted Code in MacOS-like Window",
+    },
+    {
+        pageId: 4,
+        screen: (ctx, isUpdate, delta, states, events) => {
+            const canvasWidth = ctx.canvas.width;
+            const canvasHeight = ctx.canvas.height;
+    
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            if (!isUpdate) {
+                states.textY = canvasHeight * 0.1;
+                states.lineHeight = 24;
+                states.history = [];
+                states.currentInput = '';
+                states.prompt = '$ ';
+
+                events.on('keydown', (event) => {
+                    event.preventDefault();
+                    const key = event.key;
+                    if (key === 'Enter') {
+                        const command = states.currentInput.trim();
+                        const folders = [
+                            "bin  boot dev etc",
+                            "home lib  opt temp",
+                            "root run  sys proc",
+                            "usr  var"
+                        ];
+                        const commands = ["bash", "dd", "rm", "mkdir", "touch", "cp", "cd"];
+                        if (command) {
+                            states.history.push(states.prompt + command);
+                            if (command === 'help') {
+                                states.history.push('Available commands: help, clear, ls, echo <message>');
+                            } else if (command === 'clear') {
+                                states.history = [];
+                            } else if (command.startsWith('echo ')) {
+                                const message = command.slice(5);
+                                states.history.push(message);
+                            } else if (commands.includes(command.split(' ')[0])) {
+                            } else if (command.startsWith('ls')) {
+                                const message = command.slice(2);
+                                if(message && message.trim() !== '/') states.history.push(folders.join(' ').match(message.trim()) ? `"${message.trim()}": Permission denied (os error 13)` : `"${message.trim()}": No such file or directory (os error 2)`);
+                                else states.history.push(...folders);
+                            } else {
+                                states.history.push(`bash: ${command}: command not found`);
+                            }
+                        }
+                        states.currentInput = '';
+                    } else if (key === 'Backspace') {
+                        states.currentInput = states.currentInput.slice(0, -1);
+                    } else if (key?.length === 1) {
+                        states.currentInput += key;
+                    }
+                });
+                
+            }
+
+            ctx.fillStyle = '#48ff22';
+            ctx.font = '20px monospace';
+            
+            for (let i = 0; i < states.history.length; i++) {
+                ctx.fillText(states.history[i], canvasWidth * 0.1, states.textY + i * states.lineHeight);
+            }
+    
+            ctx.fillText(states.prompt + states.currentInput, canvasWidth * 0.1, states.textY + states.history.length * states.lineHeight);
+
+            const cursorX = canvasWidth * 0.1 + ctx.measureText(states.prompt + states.currentInput).width;
+            const cursorY = states.textY + states.history.length * states.lineHeight - 18;
+            ctx.fillRect(cursorX, cursorY, 2, 20); 
+
+            return true;
+        },
+        content: () => {
+            return <div>Page 4 Content</div>;
+        },
+        title: "Linux-like Terminal",
     }
-    // Add more pages as needed
 ];
 
 const App = () => {
-    const [currentPage, setCurrentPage] = useState(3);
+    const [currentPage, setCurrentPage] = useState(4);
     const laptopRef = useRef();
 
     return (
@@ -572,16 +516,19 @@ const App = () => {
         }}>
             <Canvas
                 camera={{
-                    position: [-3, 2, 3], // Camera closer to the object and positioned at 8 o'clock (x, y, z)
-                    fov: 35, // Narrower field of view for an isometric-like perspective
+                    position: [-4, 3, 4],
+                    fov: 35,
                 }}>
+
                 <directionalLight lookAt={() => laptopRef.current} intensity={1} />
                 <directionalLight position={[-3, 2, -3]} lookAt={() => laptopRef.current} intensity={1} />
                 <directionalLight position={[-3, 10, -3]} lookAt={() => laptopRef.current} intensity={1} />
                 <directionalLight position={[3, 10, 3]} lookAt={() => laptopRef.current} intensity={1} />
                 <ambientLight color={'#ffffff'} intensity={1} />
+
+
                 <group ref={laptopRef}>
-                <Laptop onClick={() => setCurrentPage((prev) => (prev + 1) % pageData.length)} currentPage={currentPage} />
+                    <Laptop onClick={() => setCurrentPage((prev) => (prev + 1) % pageData.length)} currentPage={currentPage} />
                 </group>
             </Canvas>
         </div>
